@@ -34,6 +34,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       })
     );
+    this.playlistService.refreshPlaylists();
   }
 
   ngOnDestroy(): void {

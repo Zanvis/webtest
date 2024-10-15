@@ -84,4 +84,7 @@ export class PlaylistService {
         })
       );
   }
+  refreshPlaylists(): void {
+    this.loadPlaylists();
+  }
 }
