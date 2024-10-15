@@ -14,7 +14,7 @@ export interface Playlist {
   providedIn: 'root'
 })
 export class PlaylistService {
-  private apiUrl = 'https://music-app-backend-h3sd.onrender.com/api/';
+  private apiUrl = 'https://music-app-backend-h3sd.onrender.com/api';
   // private apiUrl = 'http://localhost:3000/api';
   private playlistsSubject = new BehaviorSubject<Playlist[]>([]);
   playlists$ = this.playlistsSubject.asObservable();
