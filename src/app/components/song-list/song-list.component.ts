@@ -77,7 +77,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { Song, SongService } from '../../services/song.service';
 import { AudioPlayerComponent } from '../audio-player/audio-player.component';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { Playlist, PlaylistService } from '../../services/playlist.service';
 
 @Component({
@@ -167,6 +167,27 @@ export class SongListComponent implements OnInit, OnDestroy {
       });
     }
   }
+  // loadPlaylists(): void {
+  //   this.playlistService.getPlaylists().subscribe({
+  //     error: (error: any) => {
+  //       console.error('Error loading playlists:', error);
+  //     },
+  //   });
+  // }
+
+  // addToPlaylist(song: Song, playlistId: string): void {
+  //   this.playlistService.addSongToPlaylist(playlistId, song).subscribe({
+  //     next: (updatedPlaylist) => {
+  //       this.playlists = this.playlists.map(p => 
+  //         p._id === updatedPlaylist._id ? updatedPlaylist : p
+  //       );
+  //       this.cdr.markForCheck();
+  //     },
+  //     error: (err) => {
+  //       console.error('Error adding song to playlist:', err);
+  //     }
+  //   });
+  // }
   loadPlaylists(): void {
     this.playlistService.getPlaylists().subscribe({
       error: (error: any) => {
@@ -176,15 +197,20 @@ export class SongListComponent implements OnInit, OnDestroy {
   }
 
   addToPlaylist(song: Song, playlistId: string): void {
+    // Optimistic update
+    this.playlists = this.playlists.map(playlist => {
+      if (playlist._id === playlistId) {
+        return { ...playlist, songs: [...playlist.songs, song] };
+      }
+      return playlist;
+    });
+    this.cdr.markForCheck();
+  
     this.playlistService.addSongToPlaylist(playlistId, song).subscribe({
-      next: (updatedPlaylist) => {
-        this.playlists = this.playlists.map(p => 
-          p._id === updatedPlaylist._id ? updatedPlaylist : p
-        );
-        this.cdr.markForCheck();
-      },
       error: (err) => {
         console.error('Error adding song to playlist:', err);
+        // Revert the optimistic update
+        this.loadPlaylists();
       }
     });
   }
