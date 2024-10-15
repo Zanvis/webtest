@@ -35,14 +35,9 @@ export class PlaylistComponent implements OnInit, OnDestroy {
       })
     );
   }
+
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
-  }
-
-  loadPlaylists(): void {
-    this.playlistService.getPlaylists().subscribe({
-      error: (error: any) => console.error('Error loading playlists:', error)
-    });
   }
 
   createPlaylist(): void {
@@ -67,6 +62,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
 
   removeSongFromPlaylist(playlistId: string, songId: string): void {
     this.playlistService.removeSongFromPlaylist(playlistId, songId).subscribe({
+      next: () => this.cdr.markForCheck(),
       error: error => console.error('Error removing song from playlist:', error)
     });
   }
@@ -79,8 +75,9 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     }
   }
 
-  playSong(song: Song): void {
+  playSong(song: Song, playlist: Playlist): void {
     this.currentSong = song;
+    this.currentPlaylist = playlist;
     this.cdr.markForCheck();
   }
 
