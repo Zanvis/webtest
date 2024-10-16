@@ -18,6 +18,8 @@ export class PlaylistService {
   private playlistsSubject = new BehaviorSubject<Playlist[]>([]);
   playlists$ = this.playlistsSubject.asObservable();
   private isLoading = false;
+  private lastLoaded: number = 0;
+  private readonly CACHE_DURATION = 30000; // 30 seconds cache
 
   constructor(private http: HttpClient) {
     this.loadPlaylists().subscribe({
@@ -26,33 +28,42 @@ export class PlaylistService {
   }
 
   loadPlaylists(): Observable<Playlist[]> {
-    if (this.isLoading) {
+    // If we're already loading or the cache is fresh, return the current value
+    if (this.isLoading || (Date.now() - this.lastLoaded < this.CACHE_DURATION)) {
       return this.playlists$;
     }
 
     this.isLoading = true;
+
     return this.http.get<Playlist[]>(`${this.apiUrl}/playlists`).pipe(
-      retry(3), // Retry failed requests up to 3 times
+      retry(3),
       tap(playlists => {
         if (playlists) {
           this.playlistsSubject.next(playlists);
+          this.lastLoaded = Date.now();
         }
         this.isLoading = false;
       }),
       catchError(error => {
         console.error('Error loading playlists:', error);
         this.isLoading = false;
-        // Return current value instead of empty array to preserve any existing data
-        return of(this.playlistsSubject.value);
+        // Only return current value if we have one
+        if (this.playlistsSubject.value.length > 0) {
+          return of(this.playlistsSubject.value);
+        }
+        return throwError(() => error);
       })
     );
   }
 
   getPlaylists(): Observable<Playlist[]> {
-    // Always try to load fresh data
-    return this.loadPlaylists().pipe(
-      catchError(() => this.playlists$) // Fallback to current value if load fails
-    );
+    // Force a fresh load if cache is stale
+    if (Date.now() - this.lastLoaded >= this.CACHE_DURATION) {
+      return this.loadPlaylists();
+    }
+    // Return cached data and refresh in background
+    this.loadPlaylists().subscribe();
+    return this.playlists$;
   }
 
   createPlaylist(name: string): Observable<Playlist> {
@@ -112,6 +123,8 @@ export class PlaylistService {
     );
   }
   refreshPlaylists(): Observable<Playlist[]> {
+    // Force a fresh load regardless of cache
+    this.lastLoaded = 0;
     return this.loadPlaylists();
   }
 }

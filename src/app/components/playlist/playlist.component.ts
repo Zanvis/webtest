@@ -31,7 +31,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Subscribe to the playlistService's playlists$ stream
+    this.loadPlaylists();
     this.subscription.add(
       this.playlistService.playlists$.subscribe(playlists => {
         this.playlists$.next(playlists);
@@ -56,19 +56,23 @@ export class PlaylistComponent implements OnInit, OnDestroy {
       this.playlistService.getPlaylists().pipe(
         finalize(() => {
           this.isLoading.next(false);
-          this.cdr.markForCheck();
+          this.cdr.detectChanges();
         })
       ).subscribe({
-        next: () => {
+        next: (playlists) => {
+          this.playlists$.next(playlists);
           this.error.next(null);
+          this.cdr.detectChanges();
         },
         error: error => {
           console.error('Error loading playlists:', error);
           this.error.next('Failed to load playlists. Please try again.');
+          this.cdr.detectChanges();
         }
       })
     );
   }
+
   createPlaylist(): void {
     if (this.newPlaylistName.trim()) {
       this.playlistService.createPlaylist(this.newPlaylistName.trim()).subscribe({
