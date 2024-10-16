@@ -32,7 +32,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     this.playlists$ = this.playlistService.playlists$.pipe(
       tap(() => {
         this.loading = false;
-        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       })
     );
   }
@@ -81,8 +81,18 @@ export class PlaylistComponent implements OnInit, OnDestroy {
 
   deletePlaylist(playlistId: string): void {
     if (confirm('Are you sure you want to delete this playlist?')) {
+      this.isLoading.next(true);
       this.playlistService.deletePlaylist(playlistId).subscribe({
-        error: error => console.error('Error deleting playlist:', error)
+        next: () => {
+          this.isLoading.next(false);
+          this.refreshPlaylists();
+          this.cdr.detectChanges();
+        },
+        error: error => {
+          console.error('Error deleting playlist:', error);
+          this.isLoading.next(false);
+          this.cdr.detectChanges();
+        }
       });
     }
   }

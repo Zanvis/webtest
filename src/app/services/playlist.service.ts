@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { tap, map, catchError, retry } from 'rxjs/operators';
 import { Song } from './song.service';
 
@@ -99,14 +99,17 @@ export class PlaylistService {
   }
 
   deletePlaylist(playlistId: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/playlists/${playlistId}`)
-      .pipe(
-        tap(() => {
-          const currentPlaylists = this.playlistsSubject.value;
-          const updatedPlaylists = currentPlaylists.filter(playlist => playlist._id !== playlistId);
-          this.playlistsSubject.next(updatedPlaylists);
-        })
-      );
+    return this.http.delete(`${this.apiUrl}/playlists/${playlistId}`).pipe(
+      tap(() => {
+        const currentPlaylists = this.playlistsSubject.value;
+        const updatedPlaylists = currentPlaylists.filter(playlist => playlist._id !== playlistId);
+        this.playlistsSubject.next(updatedPlaylists);
+      }),
+      catchError(error => {
+        console.error('Error deleting playlist:', error);
+        return throwError(() => error);
+      })
+    );
   }
   refreshPlaylists(): Observable<Playlist[]> {
     return this.loadPlaylists();
