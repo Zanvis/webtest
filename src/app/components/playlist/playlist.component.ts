@@ -29,20 +29,16 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     private songService: SongService,
     private cdr: ChangeDetectorRef
   ) {}
+
   ngOnInit(): void {
-    // Wait for the service to initialize
+    // Subscribe to the playlistService's playlists$ stream
     this.subscription.add(
-      this.playlistService.playlists$.pipe(
-        tap(() => {
-          this.loading = false;
-          this.cdr.detectChanges();
-        })
-      ).subscribe(playlists => {
+      this.playlistService.playlists$.subscribe(playlists => {
         this.playlists$.next(playlists);
+        this.loading = false;
+        this.cdr.detectChanges();
       })
     );
-
-    // Initial load
     this.loadPlaylists();
   }
 
