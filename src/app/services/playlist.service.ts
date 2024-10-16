@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { tap, map, catchError, retry } from 'rxjs/operators';
+import { tap, map, catchError, retry, shareReplay } from 'rxjs/operators';
 import { Song } from './song.service';
 
 export interface Playlist {
@@ -20,9 +20,7 @@ export class PlaylistService {
   private isLoading = false;
 
   constructor(private http: HttpClient) {
-    this.loadPlaylists().subscribe({
-      error: (error) => console.error('Error initializing playlists:', error)
-    });
+    this.loadPlaylists().subscribe();
   }
 
   loadPlaylists(): Observable<Playlist[]> {
@@ -32,7 +30,7 @@ export class PlaylistService {
 
     this.isLoading = true;
     return this.http.get<Playlist[]>(`${this.apiUrl}/playlists`).pipe(
-      retry(3), // Retry failed requests up to 3 times
+      retry(3),
       tap(playlists => {
         if (playlists) {
           this.playlistsSubject.next(playlists);
@@ -42,17 +40,14 @@ export class PlaylistService {
       catchError(error => {
         console.error('Error loading playlists:', error);
         this.isLoading = false;
-        // Return current value instead of empty array to preserve any existing data
-        return of(this.playlistsSubject.value);
-      })
+        return throwError(() => new Error('Failed to load playlists'));
+      }),
+      shareReplay(1)
     );
   }
 
   getPlaylists(): Observable<Playlist[]> {
-    // Always try to load fresh data
-    return this.loadPlaylists().pipe(
-      catchError(() => this.playlists$) // Fallback to current value if load fails
-    );
+    return this.loadPlaylists();
   }
 
   createPlaylist(name: string): Observable<Playlist> {
