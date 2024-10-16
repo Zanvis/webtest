@@ -107,7 +107,7 @@ export class PlaylistService {
       }),
       catchError(error => {
         console.error('Error deleting playlist:', error);
-        return throwError(() => error);
+        return throwError(() => new Error('Failed to delete playlist'));
       })
     );
   }
