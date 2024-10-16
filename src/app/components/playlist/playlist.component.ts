@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, finalize, Observable, Subscription, tap } from 'rxjs';
 import { Playlist, PlaylistService } from '../../services/playlist.service';
 import { Song, SongService } from '../../services/song.service';
 import { AudioPlayerComponent } from '../audio-player/audio-player.component';
@@ -20,13 +20,21 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   private subscription: Subscription = new Subscription();
   currentSong: Song | null = null;
   currentPlaylist: Playlist | null = null;
+  loading = true;
+  isLoading = new BehaviorSubject<boolean>(true);
+  error = new BehaviorSubject<string | null>(null);
   
   constructor(
     private playlistService: PlaylistService,
     private songService: SongService,
     private cdr: ChangeDetectorRef
   ) {
-    this.playlists$ = this.playlistService.playlists$;
+    this.playlists$ = this.playlistService.playlists$.pipe(
+      tap(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      })
+    );
   }
 
   ngOnInit(): void {
@@ -35,12 +43,27 @@ export class PlaylistComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+    this.isLoading.complete();
+    this.error.complete();
   }
   loadPlaylists(): void {
+    this.isLoading.next(true);
+    this.error.next(null);
+    
     this.subscription.add(
-      this.playlistService.getPlaylists().subscribe({
-        next: () => this.cdr.markForCheck(),
-        error: error => console.error('Error loading playlists:', error)
+      this.playlistService.getPlaylists().pipe(
+        finalize(() => {
+          this.isLoading.next(false);
+          this.cdr.markForCheck();
+        })
+      ).subscribe({
+        next: () => {
+          this.error.next(null);
+        },
+        error: error => {
+          console.error('Error loading playlists:', error);
+          this.error.next('Failed to load playlists. Please try again.');
+        }
       })
     );
   }
