@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, finalize, Observable, Subscription, tap } from 'rxjs';
 import { Playlist, PlaylistService } from '../../services/playlist.service';
 import { Song, SongService } from '../../services/song.service';
 import { AudioPlayerComponent } from '../audio-player/audio-player.component';
@@ -11,100 +11,104 @@ import { AudioPlayerComponent } from '../audio-player/audio-player.component';
   standalone: true,
   imports: [CommonModule, FormsModule, AudioPlayerComponent],
   templateUrl: './playlist.component.html',
-  styleUrls: ['./playlist.component.css'],
+  styleUrl: './playlist.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PlaylistComponent implements OnInit, OnDestroy {
-  playlists$: Observable<Playlist[]>;
-  loading$: Observable<boolean>;
+  playlists$ = new BehaviorSubject<Playlist[]>([]);
   newPlaylistName: string = '';
   private subscription: Subscription = new Subscription();
   currentSong: Song | null = null;
   currentPlaylist: Playlist | null = null;
-  error: string | null = null;
-
+  loading = true;
+  isLoading = new BehaviorSubject<boolean>(true);
+  error = new BehaviorSubject<string | null>(null);
+  
   constructor(
     private playlistService: PlaylistService,
     private songService: SongService,
     private cdr: ChangeDetectorRef
-  ) {
-    this.playlists$ = this.playlistService.playlists$;
-    this.loading$ = this.playlistService.loading$;
-  }
+  ) {}
 
   ngOnInit(): void {
-    this.loadInitialPlaylists();
-  }
-
-  loadInitialPlaylists(): void {
-    this.subscription.add(
-      this.playlistService.refreshPlaylists().subscribe({
-        next: () => {
-          // Playlists loaded successfully
-          this.cdr.markForCheck();
-        },
-        error: (err) => {
-          console.error('Error loading initial playlists:', err);
-          this.error = 'Failed to load playlists. Please try refreshing the page.';
-          this.cdr.markForCheck();
-        }
-      })
-    );
+    this.loadPlaylists();
   }
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+    this.playlists$.complete();
+    this.isLoading.complete();
+    this.error.complete();
   }
 
-  refreshPlaylists(): void {
+  loadPlaylists(): void {
+    this.isLoading.next(true);
+    this.error.next(null);
+    
     this.subscription.add(
-      this.playlistService.refreshPlaylists().subscribe({
-        next: () => {
-          // Reset error message on successful refresh
-          this.error = null;
+      this.playlistService.getPlaylists().pipe(
+        tap(playlists => {
+          this.playlists$.next(playlists);
+          this.error.next(null);
+        }),
+        finalize(() => {
+          this.isLoading.next(false);
           this.cdr.markForCheck();
-        },
-        error: (err) => {
-          console.error('Error refreshing playlists:', err);
-          this.error = 'Failed to refresh playlists. Please try again.';
-          this.cdr.markForCheck();
+        })
+      ).subscribe({
+        error: error => {
+          console.error('Error loading playlists:', error);
+          this.error.next('Failed to load playlists. Please try again.');
+          this.playlists$.next([]); // Clear playlists on error
         }
       })
     );
   }
-
   createPlaylist(): void {
     if (this.newPlaylistName.trim()) {
-      this.subscription.add(
-        this.playlistService.createPlaylist(this.newPlaylistName.trim()).subscribe({
-          next: () => {
-            this.newPlaylistName = '';
-            this.cdr.markForCheck();
-          },
-          error: (err) => {
-            console.error('Error creating playlist:', err);
-            this.error = 'Failed to create playlist. Please try again.';
-            this.cdr.markForCheck();
-          }
-        })
-      );
+      this.isLoading.next(true);
+      this.playlistService.createPlaylist(this.newPlaylistName.trim()).subscribe({
+        next: (newPlaylist) => {
+          const currentPlaylists = this.playlists$.value;
+          this.playlists$.next([...currentPlaylists, newPlaylist]);
+          this.newPlaylistName = '';
+          this.isLoading.next(false);
+          this.cdr.markForCheck();
+        },
+        error: error => {
+          console.error('Error creating playlist:', error);
+          this.error.next('Failed to create playlist. Please try again.');
+          this.isLoading.next(false);
+          this.cdr.markForCheck();
+        }
+      });
     }
   }
 
   deletePlaylist(playlistId: string): void {
     if (confirm('Are you sure you want to delete this playlist?')) {
+      this.isLoading.next(true);
       this.subscription.add(
-        this.playlistService.deletePlaylist(playlistId).subscribe({
+        this.playlistService.deletePlaylist(playlistId).pipe(
+          finalize(() => {
+            this.isLoading.next(false);
+            this.cdr.detectChanges();
+          })
+        ).subscribe({
           next: () => {
+            const currentPlaylists = this.playlists$.value;
+            const updatedPlaylists = currentPlaylists.filter(p => p._id !== playlistId);
+            this.playlists$.next(updatedPlaylists);
+            
             if (this.currentPlaylist?._id === playlistId) {
               this.currentPlaylist = null;
               this.currentSong = null;
             }
-            this.cdr.markForCheck();
+            
+            this.cdr.detectChanges();
           },
-          error: (err) => {
-            console.error('Error deleting playlist:', err);
-            this.error = 'Failed to delete playlist. Please try again.';
-            this.cdr.markForCheck();
+          error: (error) => {
+            console.error('Error deleting playlist:', error);
+            this.error.next('Failed to delete playlist. Please try again.');
           }
         })
       );
@@ -112,16 +116,10 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   removeSongFromPlaylist(playlistId: string, songId: string): void {
-    this.subscription.add(
-      this.playlistService.removeSongFromPlaylist(playlistId, songId).subscribe({
-        next: () => this.cdr.markForCheck(),
-        error: (err) => {
-          console.error('Error removing song from playlist:', err);
-          this.error = 'Failed to remove song from playlist. Please try again.';
-          this.cdr.markForCheck();
-        }
-      })
-    );
+    this.playlistService.removeSongFromPlaylist(playlistId, songId).subscribe({
+      next: () => this.cdr.markForCheck(),
+      error: error => console.error('Error removing song from playlist:', error)
+    });
   }
 
   playPlaylist(playlist: Playlist): void {
@@ -164,7 +162,9 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
-
+  refreshPlaylists(): void {
+    this.loadPlaylists();
+  }
   trackByPlaylistId(index: number, playlist: Playlist): string {
     return playlist._id;
   }
