@@ -104,6 +104,13 @@ export class PlaylistService {
   deletePlaylist(playlistId: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/playlists/${playlistId}`).pipe(
       switchMap(() => this.refreshPlaylists()),
+      tap(() => {
+        // Update the cached playlists after successful deletion
+        const currentPlaylists = this.playlistsSubject.getValue();
+        const updatedPlaylists = currentPlaylists.filter(p => p._id !== playlistId);
+        this.playlistsSubject.next(updatedPlaylists);
+        this.setCachedPlaylists(updatedPlaylists);
+      }),
       catchError(error => {
         console.error('Error deleting playlist:', error);
         return throwError(() => new Error('Failed to delete playlist'));
