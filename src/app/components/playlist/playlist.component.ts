@@ -33,19 +33,19 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadPlaylists();
+    this.refreshPlaylists();
   }
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
   }
 
-  loadPlaylists(): void {
+  refreshPlaylists(): void {
     this.subscription.add(
-      this.playlistService.loadPlaylists().subscribe({
+      this.playlistService.refreshPlaylists().subscribe({
         error: (err) => {
-          console.error('Error loading playlists:', err);
-          this.error = 'Failed to load playlists. Please try again.';
+          console.error('Error refreshing playlists:', err);
+          this.error = 'Failed to refresh playlists. Please try again.';
           this.cdr.markForCheck();
         }
       })
@@ -143,10 +143,6 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  }
-
-  refreshPlaylists(): void {
-    this.loadPlaylists();
   }
 
   trackByPlaylistId(index: number, playlist: Playlist): string {
