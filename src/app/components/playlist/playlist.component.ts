@@ -33,9 +33,24 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.refreshPlaylists();
+    this.loadInitialPlaylists();
   }
 
+  loadInitialPlaylists(): void {
+    this.subscription.add(
+      this.playlistService.refreshPlaylists().subscribe({
+        next: () => {
+          // Playlists loaded successfully
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('Error loading initial playlists:', err);
+          this.error = 'Failed to load playlists. Please try refreshing the page.';
+          this.cdr.markForCheck();
+        }
+      })
+    );
+  }
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
   }
@@ -43,6 +58,11 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   refreshPlaylists(): void {
     this.subscription.add(
       this.playlistService.refreshPlaylists().subscribe({
+        next: () => {
+          // Reset error message on successful refresh
+          this.error = null;
+          this.cdr.markForCheck();
+        },
         error: (err) => {
           console.error('Error refreshing playlists:', err);
           this.error = 'Failed to refresh playlists. Please try again.';
