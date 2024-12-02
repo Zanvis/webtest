@@ -1,0 +1,83 @@
+<div class="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-gray-200 dark:bg-gray-800 p-8 rounded-lg shadow-lg border border-gray-300 dark:border-gray-700">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+                {{ 'PRIVACY_POLICY.TITLE' | translate }}
+            </h1>
+            
+            <div class="space-y-6 text-gray-700 dark:text-gray-300">
+                <p class="text-sm mb-4">
+                    {{ 'PRIVACY_POLICY.LAST_UPDATED' | translate }}
+                </p>
+
+                <section class="space-y-4">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                        {{ 'PRIVACY_POLICY.SECTIONS.INFORMATION_COLLECT.TITLE' | translate }}
+                    </h2>
+                    <p>{{ 'PRIVACY_POLICY.SECTIONS.INFORMATION_COLLECT.DESCRIPTION' | translate }}</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li *ngFor="let item of ('PRIVACY_POLICY.SECTIONS.INFORMATION_COLLECT.ITEMS' | translate)">
+                            {{ item }}
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="space-y-4">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                        {{ 'PRIVACY_POLICY.SECTIONS.INFORMATION_USE.TITLE' | translate }}
+                    </h2>
+                    <p>{{ 'PRIVACY_POLICY.SECTIONS.INFORMATION_USE.DESCRIPTION' | translate }}</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li *ngFor="let item of ('PRIVACY_POLICY.SECTIONS.INFORMATION_USE.ITEMS' | translate)">
+                            {{ item }}
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="space-y-4">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                        {{ 'PRIVACY_POLICY.SECTIONS.INFORMATION_SHARING.TITLE' | translate }}
+                    </h2>
+                    <p>{{ 'PRIVACY_POLICY.SECTIONS.INFORMATION_SHARING.DESCRIPTION' | translate }}</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li *ngFor="let item of ('PRIVACY_POLICY.SECTIONS.INFORMATION_SHARING.ITEMS' | translate)">
+                            {{ item }}
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="space-y-4">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                        {{ 'PRIVACY_POLICY.SECTIONS.DATA_SECURITY.TITLE' | translate }}
+                    </h2>
+                    <p>{{ 'PRIVACY_POLICY.SECTIONS.DATA_SECURITY.DESCRIPTION' | translate }}</p>
+                </section>
+
+                <section class="space-y-4">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                        {{ 'PRIVACY_POLICY.SECTIONS.USER_RIGHTS.TITLE' | translate }}
+                    </h2>
+                    <p>{{ 'PRIVACY_POLICY.SECTIONS.USER_RIGHTS.DESCRIPTION' | translate }}</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li *ngFor="let item of ('PRIVACY_POLICY.SECTIONS.USER_RIGHTS.ITEMS' | translate)">
+                            {{ item }}
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="space-y-4">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                        {{ 'PRIVACY_POLICY.SECTIONS.CONTACT.TITLE' | translate }}
+                    </h2>
+                    <p>{{ 'PRIVACY_POLICY.SECTIONS.CONTACT.DESCRIPTION' | translate }}</p>
+                </section>
+
+                <div class="mt-8 flex justify-center">
+                    <a routerLink="/register" class="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200">
+                        {{ 'PRIVACY_POLICY.RETURN_TO_REGISTRATION' | translate }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

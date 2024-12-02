@@ -1,0 +1,271 @@
+<div [class]="isDarkMode ? 'dark' : ''" class="h-full">
+  <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen flex flex-col">
+    <nav class="bg-gray-100 dark:bg-gray-800 p-4">
+      <div class="container mx-auto flex justify-between items-center">
+        <a routerLink="/" class="text-2xl font-bold hover:text-gray-600 dark:hover:text-gray-300">SoundSphere</a>
+        
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex space-x-4 items-center">
+          <a routerLink="/songs" routerLinkActive="text-blue-500" class="hover:text-gray-600 dark:hover:text-gray-300">{{'NAV.SONGS' | translate}}</a>
+          <a routerLink="/playlists" routerLinkActive="text-blue-500" class="hover:text-gray-600 dark:hover:text-gray-300">{{'NAV.PLAYLISTS' | translate}}</a>
+          <div class="relative inline-block">
+            <button 
+              [disabled]="!isAuthenticated" 
+              (click)="handleUploadClick()" 
+              (mouseenter)="!isAuthenticated && toggleUploadTooltip()"
+              (mouseleave)="!isAuthenticated && toggleUploadTooltip()"
+              routerLinkActive="text-blue-500" 
+              class="hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+            >
+            {{'NAV.UPLOAD' | translate}}
+            </button>
+            <div *ngIf="!isAuthenticated && uploadTooltip" 
+                class="absolute z-10 w-48 px-2 py-1 mt-2 text-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 rounded-lg shadow-lg transition-opacity duration-300"
+                style="top: 100%; left: 50%; transform: translateX(-50%);"
+            >
+            {{'TOOLTIPS.UPLOAD_REQUIRED_LOGIN' | translate}}
+            </div>
+          </div>
+          <a routerLink="/team" routerLinkActive="text-blue-500" class="hover:text-gray-600 dark:hover:text-gray-300">{{'NAV.TEAM' | translate}}</a>
+          <a routerLink="/radio" routerLinkActive="text-blue-500" class="hover:text-gray-600 dark:hover:text-gray-300">{{'NAV.RADIO' | translate}}</a>
+          <div class="relative inline-block">
+            <button 
+              [disabled]="!isAuthenticated" 
+              (click)="handleJamSessionClick()" 
+              (mouseenter)="!isAuthenticated && toggleJamSessionTooltip()"
+              (mouseleave)="!isAuthenticated && toggleJamSessionTooltip()"
+              routerLinkActive="text-blue-500" 
+              class="hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+            >
+            {{'NAV.JAM_SESSION' | translate}}
+            </button>
+            <div *ngIf="!isAuthenticated && jamSessionTooltip" 
+                class="absolute z-10 w-48 px-2 py-1 mt-2 text-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 rounded-lg shadow-lg transition-opacity duration-300"
+                style="top: 100%; left: 50%; transform: translateX(-50%);"
+            >
+            {{'TOOLTIPS.JAM_SESSION_REQUIRED_LOGIN' | translate}}
+            </div>
+          </div>
+          <div class="relative inline-block language-dropdown-container">
+            <button 
+              (click)="toggleLanguageDropdown($event)"
+              class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 flex items-center justify-center space-x-2 text-sm font-medium"
+              aria-label="Select language"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-300" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+              <span class="hidden md:inline">{{ getSelectedLanguageName() }}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            <div *ngIf="isLanguageDropdownOpen" 
+                class="absolute right-0 mt-2 w-32 text-center bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50"
+            >
+              <button 
+                *ngFor="let lang of availableLanguages" 
+                (click)="selectLanguage(lang.code)"
+                class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                [class.bg-gray-200]="currentLanguage === lang.code"
+                [class.dark:bg-gray-600]="currentLanguage === lang.code"
+              >
+                <span>{{ lang.name }}</span>
+              </button>
+            </div>
+          </div>
+          <!-- Theme Toggle Button -->
+          <button 
+            (click)="toggleTheme()"
+            class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 flex items-center justify-center"
+            aria-label="Toggle theme"
+          >
+            <!-- Sun icon for dark mode -->
+            <svg *ngIf="isDarkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <!-- Moon icon for light mode -->
+            <svg *ngIf="!isDarkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+    
+          <!-- Authentication Links -->
+          <ng-container *ngIf="!isAuthenticated">
+            <a routerLink="/login" routerLinkActive="text-blue-500" class="hover:text-gray-600 dark:hover:text-gray-300 pl-2">{{'NAV.LOGIN' | translate}}</a>
+            <a routerLink="/register" routerLinkActive="text-blue-500" class="hover:text-gray-600 dark:hover:text-gray-300">{{'NAV.REGISTER' | translate}}</a>
+          </ng-container>
+    
+          <!-- User Menu -->
+          <div *ngIf="isAuthenticated" class="relative ml-4 user-menu-container">
+            <button (click)="toggleUserMenu($event)" class="flex items-center space-x-2 hover:text-gray-600 dark:hover:text-gray-300 pl-2">
+              <span>{{ username }}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            <!-- User Dropdown Menu -->
+            <div *ngIf="isUserMenuOpen" class="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50">
+              <a routerLink="/profile" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">{{'NAV.PROFILE' | translate}}</a>
+              <a routerLink="/settings" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">{{'NAV.SETTINGS' | translate}}</a>
+              <button (click)="logout()" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
+                {{'NAV.LOGOUT' | translate}}
+              </button>
+            </div>
+          </div>
+        </div>
+    
+        <!-- Mobile Menu Button -->
+        <div class="md:hidden flex items-center space-x-2">
+          <!-- Theme Toggle for Mobile -->
+          <button 
+            (click)="toggleTheme()"
+            class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+            aria-label="Toggle theme"
+          >
+            <svg *ngIf="isDarkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg *ngIf="!isDarkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+          
+          <!-- Language Dropdown for Mobile (just the globe icon) -->
+          <div class="relative inline-block language-dropdown-container">
+            <button 
+              (click)="toggleLanguageDropdown($event)"
+              class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 flex items-center justify-center"
+              aria-label="Select language"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-300" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+            </button>
+            
+            <div *ngIf="isLanguageDropdownOpen" 
+                class="absolute right-0 mt-2 w-32 text-center bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50"
+            >
+              <button 
+                *ngFor="let lang of availableLanguages" 
+                (click)="selectLanguage(lang.code); toggleMenu()"
+                class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                [class.bg-gray-200]="currentLanguage === lang.code"
+                [class.dark:bg-gray-600]="currentLanguage === lang.code"
+              >
+                <span>{{ lang.name }}</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Hamburger Menu Button -->
+          <button (click)="toggleMenu()" class="p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation -->
+      <div *ngIf="isMenuOpen" class="md:hidden mt-4">
+        <div class="flex flex-col space-y-2">
+          <a routerLink="/" routerLinkActive="text-blue-500" 
+            [routerLinkActiveOptions]="{exact: true}"
+            class="hover:text-gray-600 dark:hover:text-gray-300 py-2"
+            (click)="toggleMenu()">{{'NAV.HOME' | translate}}</a>
+          <a routerLink="/songs" routerLinkActive="text-blue-500" 
+            class="hover:text-gray-600 dark:hover:text-gray-300 py-2"
+            (click)="toggleMenu()">{{'NAV.SONGS' | translate}}</a>
+          <a routerLink="/playlists" routerLinkActive="text-blue-500" 
+            class="hover:text-gray-600 dark:hover:text-gray-300 py-2"
+            (click)="toggleMenu()">{{'NAV.PLAYLISTS' | translate}}</a>
+          <div class="relative inline-block">
+            <button 
+              [disabled]="!isAuthenticated" 
+              (click)="handleUploadClick($event)" 
+              class="text-left hover:text-gray-600 dark:hover:text-gray-300 py-2 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none w-full"
+            >
+            {{'NAV.UPLOAD' | translate}}
+            </button>
+            <div *ngIf="!isAuthenticated && uploadTooltip" 
+                class="absolute z-10 w-48 px-2 py-1 mt-2 text-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 rounded-lg shadow-lg transition-opacity duration-300"
+                style="top: 100%; left: 0;"
+            >
+            {{'TOOLTIPS.UPLOAD_REQUIRED_LOGIN' | translate}}
+            </div>
+          </div>
+          
+          <a routerLink="/team" routerLinkActive="text-blue-500" 
+            class="hover:text-gray-600 dark:hover:text-gray-300 py-2"
+            (click)="toggleMenu()">{{'NAV.TEAM' | translate}}</a>
+          
+          <a routerLink="/radio" routerLinkActive="text-blue-500" 
+            class="hover:text-gray-600 dark:hover:text-gray-300 py-2"
+            (click)="toggleMenu()">{{'NAV.RADIO' | translate}}</a>
+          
+          <div class="relative inline-block">
+            <button 
+              [disabled]="!isAuthenticated" 
+              (click)="handleJamSessionClick($event)" 
+              class="text-left hover:text-gray-600 dark:hover:text-gray-300 py-2 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none w-full"
+            >
+              Jam Session
+            </button>
+            <div *ngIf="!isAuthenticated && jamSessionTooltip" 
+                class="absolute z-10 w-48 px-2 py-1 mt-2 text-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 rounded-lg shadow-lg transition-opacity duration-300"
+                style="top: 100%; left: 0;"
+            >
+            {{'TOOLTIPS.JAM_SESSION_REQUIRED_LOGIN' | translate}}
+            </div>
+          </div>
+          <ng-container *ngIf="!isAuthenticated">
+            <a routerLink="/login" routerLinkActive="text-blue-500" 
+              class="hover:text-gray-600 dark:hover:text-gray-300 py-2"
+              (click)="toggleMenu()">{{'NAV.LOGIN' | translate}}</a>
+            <a routerLink="/register" routerLinkActive="text-blue-500" 
+              class="hover:text-gray-600 dark:hover:text-gray-300 py-2"
+              (click)="toggleMenu()">{{'NAV.REGISTER' | translate}}</a>
+          </ng-container>
+
+          <ng-container *ngIf="isAuthenticated">
+            <a routerLink="/profile" routerLinkActive="text-blue-500" 
+              class="hover:text-gray-600 dark:hover:text-gray-300 py-2"
+              (click)="toggleMenu()">{{'NAV.PROFILE' | translate}}</a>
+            <a routerLink="/settings" routerLinkActive="text-blue-500" 
+              class="hover:text-gray-600 dark:hover:text-gray-300 py-2"
+              (click)="toggleMenu()">{{'NAV.SETTINGS' | translate}}</a>
+            <button (click)="logout(); toggleMenu()" 
+              class="text-left hover:text-gray-600 dark:hover:text-gray-300 py-2 w-full">
+              {{'NAV.LOGOUT' | translate}}
+            </button>
+          </ng-container>
+        </div>
+      </div>
+    </nav>
+    
+    <main class="flex-grow">
+      <router-outlet></router-outlet>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 py-4">
+      <div class="container mx-auto text-center">
+        <div class="mb-2">
+          <a routerLink="/terms" class="text-sm hover:text-gray-900 dark:hover:text-white mx-2">{{'FOOTER.TERMS' | translate}}</a>
+          <span class="text-gray-400 dark:text-gray-600">|</span>
+          <a routerLink="/privacy" class="text-sm hover:text-gray-900 dark:hover:text-white mx-2">{{'FOOTER.PRIVACY' | translate}}</a>
+        </div>
+        <div class="text-sm">
+          © {{ currentYear }} {{'FOOTER.COPYRIGHT' | translate}}
+        </div>
+      </div>
+    </footer>
+  </div>
+</div>
