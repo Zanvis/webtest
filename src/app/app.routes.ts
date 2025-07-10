@@ -20,7 +20,7 @@ export const routes: Routes = [
     { path: '', component: LandingComponent },
     { path: 'songs', component: SongListComponent },
     { path: 'upload', component: SongUploadComponent, canActivate: [authGuard] },
-    { path: 'about', component: TeamComponent },
+    { path: 'team', component: TeamComponent },
     { path: 'playlists', component: PlaylistComponent },
     { path: 'register', component: RegisterComponent, canActivate: [guestGuard] },
     { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
